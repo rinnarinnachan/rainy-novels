@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Novel Hub</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#050a19;
+color:white;
+}
+
+/* HEADER */
+header{
+background:#0b1a3a;
+padding:20px;
+text-align:center;
+}
+
+.logo{
+font-size:34px;
+color:#4cc9f0;
+font-weight:bold;
+text-shadow:0 0 12px #4cc9f0;
+}
+
+.tagline{
+font-size:13px;
+color:#bde0fe;
+font-style:italic;
+}
+
+/* HERO */
+.hero{
+display:flex;
+overflow-x:auto;
+gap:10px;
+padding:15px;
+background:#08122b;
+}
+
+.heroCard{
+min-width:220px;
+background:#0f1c3a;
+padding:10px;
+border-radius:10px;
+cursor:pointer;
+transition:0.3s;
+}
+
+.heroCard:hover{
+transform:scale(1.05);
+}
+
+/* LAYOUT */
+.container{
+display:flex;
+gap:20px;
+padding:20px;
+}
+
+.main{flex:3;}
+.side{
+flex:1;
+background:#0f1c3a;
+padding:10px;
+border-radius:10px;
+}
+
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
+}
+
+.card{
+background:#0f1c3a;
+padding:10px;
+border-radius:10px;
+cursor:pointer;
+transition:0.3s;
+border:1px solid #1d2b4a;
+}
+
+.card:hover{
+transform:scale(1.05);
+box-shadow:0 0 10px #4cc9f0;
+}
+
+/* PAGE */
+.page{
+display:none;
+background:#0f1c3a;
+padding:15px;
+border-radius:10px;
+}
+
+.chapter{
+background:#08122b;
+padding:10px;
+border-radius:10px;
+margin-top:10px;
+}
+
+button{
+background:#4cc9f0;
+border:none;
+padding:8px;
+margin:5px;
+cursor:pointer;
+border-radius:5px;
+}
+
+input{
+width:100%;
+padding:8px;
+margin-bottom:10px;
+border-radius:5px;
+}
+
+.small{font-size:12px;color:#bde0fe;}
+
+.comment{
+background:#08122b;
+padding:5px;
+margin-top:5px;
+font-size:12px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="logo">MY NOVEL HUB</div>
+<div class="tagline">Read. Write. Explore worlds.</div>
+</header>
+
+<!-- HERO -->
+<div class="hero" id="hero"></div>
+
+<div class="container">
+
+<div class="main">
+
+<!-- HOME -->
+<div id="home">
+
+<input id="search" placeholder="Search novels...">
+
+<!-- FILTER -->
+<button onclick="filter('all')">All</button>
+<button onclick="filter('Original')">Original</button>
+<button onclick="filter('Translated')">Translated</button>
+
+<div class="grid" id="grid"></div>
+
+</div>
+
+<!-- NOVEL -->
+<div id="novelPage" class="page">
+<button onclick="backHome()">⬅ Back</button>
+
+<h2 id="novelTitle"></h2>
+<p class="small">⭐ Rating: <span id="rating"></span></p>
+
+<button onclick="favNovel()">❤️ Add to Favorites</button>
+
+<h3>Chapters</h3>
+<div id="chapters"></div>
+</div>
+
+<!-- CHAPTER -->
+<div id="chapterPage" class="page">
+
+<button onclick="backNovel()">⬅ Back</button>
+
+<h2 id="chapterTitle"></h2>
+<p id="chapterText"></p>
+
+<button onclick="prevCh()">⬅ Prev</button>
+<button onclick="nextCh()">Next ➡</button>
+
+<h3>Comments</h3>
+<input id="commentInput" placeholder="Write comment...">
+<button onclick="addComment()">Add</button>
+<div id="comments"></div>
+
+</div>
+
+</div>
+
+<!-- FAVORITES -->
+<div class="side">
+<h3>⭐ Favorites</h3>
+<div id="favorites"></div>
+</div>
+
+</div>
+
+<script>
+
+/* ================= DATA ================= */
+let novels = [
+{
+title:"Shadow Rain",
+category:"Original",
+rating:4,
+chapters:[
+"Chapter 1: The rain begins...",
+"Chapter 2: Awakening power..."
+]
+},
+{
+title:"Blue Abyss",
+category:"Translated",
+rating:5,
+chapters:[
+"Chapter 1: The abyss opens...",
+"Chapter 2: Voices inside..."
+]
+}
+];
+
+let currentNovel=null;
+let currentChapter=0;
+
+/* ================= INIT ================= */
+function init(){
+renderHero();
+renderGrid();
+renderFav();
+}
+init();
+
+/* ================= HERO ================= */
+function renderHero(){
+let hero=document.getElementById("hero");
+hero.innerHTML="";
+novels.forEach((n,i)=>{
+hero.innerHTML+=`
+<div class="heroCard" onclick="openNovel(${i})">
+<h4>${n.title}</h4>
+<p class="small">${n.category}</p>
+</div>`;
+});
+}
+
+/* ================= GRID ================= */
+function renderGrid(){
+let grid=document.getElementById("grid");
+grid.innerHTML="";
+novels.forEach((n,i)=>{
+grid.innerHTML+=`
+<div class="card" onclick="openNovel(${i})">
+<h4>${n.title}</h4>
+<p>⭐ ${n.rating}</p>
+<p class="small">${n.category}</p>
+</div>`;
+});
+}
+
+/* ================= FILTER ================= */
+function filter(type){
+let cards=document.querySelectorAll(".card");
+novels.forEach((n,i)=>{
+cards[i].style.display =
+(type==="all" || n.category===type) ? "block":"none";
+});
+}
+
+/* ================= OPEN NOVEL ================= */
+function openNovel(i){
+currentNovel=i;
+
+document.getElementById("home").style.display="none";
+document.getElementById("novelPage").style.display="block";
+
+document.getElementById("novelTitle").innerText=novels[i].title;
+document.getElementById("rating").innerText=novels[i].rating;
+
+renderChapters();
+}
+
+/* ================= CHAPTERS ================= */
+function renderChapters(){
+let box=document.getElementById("chapters");
+box.innerHTML="";
+novels[currentNovel].chapters.forEach((c,i)=>{
+box.innerHTML+=`
+<div class="card" onclick="openChapter(${i})">
+Chapter ${i+1}
+</div>`;
+});
+}
+
+/* ================= CHAPTER ================= */
+function openChapter(i){
+currentChapter=i;
+
+document.getElementById("novelPage").style.display="none";
+document.getElementById("chapterPage").style.display="block";
+
+showChapter();
+}
+
+function showChapter(){
+let n=novels[currentNovel];
+
+document.getElementById("chapterTitle").innerText=
+n.title+" - Chapter "+(currentChapter+1);
+
+document.getElementById("chapterText").innerText=
+n.chapters[currentChapter];
+
+loadComments();
+}
+
+/* ================= NAV ================= */
+function backHome(){
+document.getElementById("novelPage").style.display="none";
+document.getElementById("home").style.display="block";
+}
+
+function backNovel(){
+document.getElementById("chapterPage").style.display="none";
+document.getElementById("novelPage").style.display="block";
+}
+
+/* ================= CHAPTER NAV ================= */
+function nextCh(){
+if(currentChapter<novels[currentNovel].chapters.length-1){
+currentChapter++;
+showChapter();
+}
+}
+
+function prevCh(){
+if(currentChapter>0){
+currentChapter--;
+showChapter();
+}
+}
+
+/* ================= FAVORITES ================= */
+function favNovel(){
+let fav=JSON.parse(localStorage.getItem("fav")||"[]");
+fav.push(novels[currentNovel].title);
+localStorage.setItem("fav",JSON.stringify(fav));
+renderFav();
+}
+
+function renderFav(){
+let box=document.getElementById("favorites");
+let fav=JSON.parse(localStorage.getItem("fav")||"[]");
+box.innerHTML="";
+fav.forEach(f=>{
+box.innerHTML+=`<p>⭐ ${f}</p>`;
+});
+}
+
+/* ================= COMMENTS ================= */
+function addComment(){
+let key="c_"+currentNovel+"_"+currentChapter;
+let data=JSON.parse(localStorage.getItem(key)||"[]");
+
+data.push(document.getElementById("commentInput").value);
+localStorage.setItem(key,JSON.stringify(data));
+
+document.getElementById("commentInput").value="";
+loadComments();
+}
+
+function loadComments(){
+let key="c_"+currentNovel+"_"+currentChapter;
+let data=JSON.parse(localStorage.getItem(key)||"[]");
+
+let box=document.getElementById("comments");
+box.innerHTML="";
+
+data.forEach(c=>{
+box.innerHTML+=`<div class="comment">${c}</div>`;
+});
+}
+
+/* ================= SEARCH ================= */
+document.getElementById("search").addEventListener("input",function(){
+let val=this.value.toLowerCase();
+let cards=document.querySelectorAll(".card");
+
+cards.forEach(c=>{
+c.style.display=c.innerText.toLowerCase().includes(val)?"block":"none";
+});
+});
+
+</script>
+
+</body>
+  </html>
